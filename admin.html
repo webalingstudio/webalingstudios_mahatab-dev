@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - WebAlingStudios</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7e22ce; --primary-dark: #6b21a8; --secondary: #f3e8ff;
+            --text-dark: #1f2937; --background: #ffffff; --gray: #e5e7eb; --gray-light: #f8fafc;
+            --success: #10b981; --warning: #ef4444; --shadow-sm: 0 4px 6px rgba(0,0,0,0.05);
+            --radius: 12px; --transition: all 0.3s ease; --spacing-md: 1.5rem; --spacing-xl: 3rem;
+        }
+        * {margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif;}
+        body {color:var(--text-dark); background-color:#f5f7fa; line-height:1.7; min-height: 100vh;}
+
+        .login-container {display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);}
+        .login-box {background: white; border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--spacing-xl); width: 100%; max-width: 400px; text-align: center;}
+        .login-logo {display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2rem;}
+        .login-logo img {height: 60px;}
+        .login-title {font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: var(--spacing-md);}
+        .login-form .form-group {margin-bottom: var(--spacing-md); text-align: left;}
+        .login-form .form-label {display: block; margin-bottom: 0.5rem; font-weight: 600;}
+        .login-form .form-control {width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid #ccc;}
+        .login-btn {background: var(--primary); color: white; border: none; border-radius: var(--radius); width: 100%; padding: 14px; cursor: pointer;}
+        .error-message {color: var(--warning); font-size: 0.9rem; margin-top: 0.5rem; display: none;}
+        .success-message {color: var(--success); font-size: 0.9rem; margin-top: 0.5rem; display: none;}
+
+        .admin-header {background-color: white; box-shadow: var(--shadow-sm); padding: var(--spacing-md) 0; position: sticky; top: 0; z-index: 100;}
+        .admin-nav {display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; padding: 0 var(--spacing-md);}
+        .admin-logo {display: flex; align-items: center; gap: 1rem;} .admin-logo img {height: 50px;}
+        .admin-website-name {font-size: 1.5rem; font-weight: 700; color: var(--primary);}
+        .admin-user {display: flex; align-items: center; gap: 1rem;}
+        .admin-avatar {width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;}
+        .logout-btn {background: none; border: 1px solid var(--primary); color: var(--primary); border-radius: var(--radius); padding: 8px 16px; cursor: pointer;}
+        .admin-container {max-width: 1400px; margin: var(--spacing-xl) auto; padding: 0 var(--spacing-md); display: flex; gap: var(--spacing-xl);}
+        .admin-sidebar {width: 280px; background-color: white; border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 2rem; height: fit-content; position: sticky; top: 120px; flex-shrink: 0;}
+        .admin-menu {list-style: none;}
+        .admin-menu-link {display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-radius: var(--radius); text-decoration: none; color: var(--text-dark); transition: var(--transition);}
+        .admin-menu-link.active, .admin-menu-link:hover {background-color: var(--primary); color: white;}
+        .admin-main {flex: 1; min-width: 0;}
+        .admin-section {background-color: white; border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--spacing-xl); margin-bottom: var(--spacing-xl);}
+        .admin-section h2 {font-size: 1.75rem; margin-bottom: 2rem;}
+        
+        .stats-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md);}
+        .stat-card {padding: var(--spacing-md); text-align: center; border-left: 4px solid var(--primary); box-shadow: var(--shadow-sm); border-radius: var(--radius);}
+        .stat-value {font-size: 2.5rem; font-weight: 700; color: var(--primary);}
+        .stat-label {font-size: 0.9rem; color: #6b7280;}
+        .bookings-header {display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md); flex-wrap: wrap; gap: var(--spacing-md);}
+        .bookings-controls {display: flex; gap: var(--spacing-md); align-items: center; flex-wrap: wrap;}
+        .bookings-table-container {overflow-x: auto;}
+        .admin-table {width: 100%; border-collapse: collapse; min-width: 800px;}
+        .admin-table th, .admin-table td {padding: var(--spacing-md); text-align: left; border-bottom: 1px solid var(--gray);}
+        .admin-table th {background-color: var(--gray-light);}
+        .status-badge {padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize;}
+        .status-confirmed {background-color: #dcfce7; color: #166534;}
+        .status-pending {background-color: #fef3c7; color: #92400e;}
+        .status-cancelled {background-color: #fee2e2; color: #991b1b;}
+        
+        .action-btn {padding: 8px 14px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 0.85rem; margin: 0.25rem; font-weight: 500;}
+        .btn-manage {background-color: var(--primary); color: white;}
+        .btn-confirm {background-color: var(--success); color: white;}
+        .btn-cancel {background-color: var(--warning); color: white;}
+        .btn-delete {background-color: #374151; color: white;}
+        .btn-refresh {background-color: #2563eb; color: white;}
+        
+        .modal-overlay {display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;}
+        .modal {background: white; border-radius: var(--radius); padding: var(--spacing-xl); max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;}
+        .modal-header {display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--gray); margin-bottom: 1.5rem;}
+        .modal-title {font-size: 1.5rem; font-weight: 600;}
+        .modal-close {background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #555;}
+        .modal-footer {display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; border-top: 1px solid var(--gray); padding-top: 1.5rem;}
+        .modal-details p {margin: 0.5rem 0; word-break: break-word;} .modal-details strong {color: var(--primary-dark);}
+
+        .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); justify-content: center; align-items: center; z-index: 9999; }
+        .loading-spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        @media (max-width: 1024px) { .admin-container {flex-direction: column;} .admin-sidebar {width: 100%; position: static;} }
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loading-overlay"><div class="loading-spinner"></div></div>
+
+    <div id="login-screen" class="login-container">
+        <div class="login-box">
+            <div class="login-logo"><img src="https://i.ibb.co/nNcZT9HJ/Screenshot-2025-11-03-070119-removebg-preview.png" alt="Logo"><span class="login-title">WebAlingStudios</span></div>
+            <h2>Admin Login</h2>
+            <form id="login-form" class="login-form">
+                <div class="form-group"><label class="form-label">Username</label><input type="text" id="username" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">Password</label><input type="password" id="password" class="form-control" required></div>
+                <div class="error-message" id="login-error">Invalid credentials</div>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-panel" style="display: none;">
+        <header class="admin-header">
+            <div class="admin-nav">
+                <div class="admin-logo"><img src="https://i.ibb.co/nNcZT9HJ/Screenshot-2025-11-03-070119-removebg-preview.png" alt="Logo"><span class="admin-website-name">Admin Panel</span></div>
+                <div class="admin-user"><div class="admin-avatar" id="admin-initial"></div><span id="admin-username-display"></span><button class="logout-btn" id="logout-btn">Logout</button></div>
+            </div>
+        </header>
+        <div class="admin-container">
+            <aside class="admin-sidebar">
+                <ul class="admin-menu">
+                    <li><a href="#dashboard" class="admin-menu-link active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                    <li><a href="#bookings" class="admin-menu-link"><i class="fas fa-calendar-check"></i><span>All Bookings</span></a></li>
+                    <li><a href="#settings" class="admin-menu-link"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+                </ul>
+            </aside>
+            <main class="admin-main">
+                <section id="dashboard" class="admin-section">
+                    <h2>Dashboard</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="stat-value" id="total-bookings">0</div><div class="stat-label">Total</div></div>
+                        <div class="stat-card"><div class="stat-value" id="pending-bookings">0</div><div class="stat-label">Pending</div></div>
+                        <div class="stat-card"><div class="stat-value" id="confirmed-bookings">0</div><div class="stat-label">Confirmed</div></div>
+                        <div class="stat-card"><div class="stat-value" id="cancelled-bookings">0</div><div class="stat-label">Cancelled</div></div>
+                    </div>
+                    <h3>Recent Bookings</h3>
+                    <div class="bookings-table-container"><table class="admin-table"><thead><tr><th>Client</th><th>Date & Time</th><th>Status</th><th>Actions</th></tr></thead><tbody id="recent-bookings-table"></tbody></table></div>
+                </section>
+                <section id="bookings" class="admin-section" style="display:none;">
+                    <div class="bookings-header">
+                        <h2>All Bookings</h2>
+                        <div class="bookings-controls">
+                            <input type="text" id="search-bookings" class="form-control" placeholder="Search...">
+                            <select id="filter-status" class="form-control"><option value="all">All</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option></select>
+                            <button class="action-btn btn-refresh" id="refresh-bookings"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="bookings-table-container"><table class="admin-table"><thead><tr><th>Client</th><th>Contact</th><th>Meeting</th><th>Status</th><th>Actions</th></tr></thead><tbody id="all-bookings-table"></tbody></table></div>
+                </section>
+                <section id="settings" class="admin-section" style="display:none;">
+                    <h2>Settings</h2><h3>Admin Credentials</h3>
+                    <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-control" id="admin-username-setting"></div>
+                    <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-control" id="new-password" placeholder="Leave blank to keep current"></div>
+                    <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-control" id="confirm-password"></div>
+                    <div class="error-message" id="password-error"></div><div class="success-message" id="password-success">Credentials updated!</div>
+                    <button class="action-btn btn-manage" id="save-settings">Save</button>
+                </section>
+            </main>
+        </div>
+        <div class="modal-overlay" id="manage-modal">
+            <div class="modal">
+                <div class="modal-header"><h3 class="modal-title">Manage Booking</h3><button class="modal-close">&times;</button></div>
+                <div class="modal-details" id="modal-details-content"></div><div class="modal-footer" id="modal-details-footer"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwq50na_XdnGgUtsEycIWkrroT8fe1yxejimR8Y8krf5rx6evTpNcytUT40QDC8KYsX8Q/exec";
+
+    const state = {
+        bookings: [],
+        credentials: { username: "admin", password: "password123" },
+    };
+
+    const dom = {
+        loading: document.getElementById('loading-overlay'),
+        login: { screen: document.getElementById('login-screen'), form: document.getElementById('login-form'), error: document.getElementById('login-error') },
+        panel: { screen: document.getElementById('admin-panel'), userDisplay: document.getElementById('admin-username-display'), initial: document.getElementById('admin-initial') },
+        menuLinks: document.querySelectorAll('.admin-menu-link'),
+        sections: document.querySelectorAll('.admin-section'),
+        dashboard: { total: document.getElementById('total-bookings'), pending: document.getElementById('pending-bookings'), confirmed: document.getElementById('confirmed-bookings'), cancelled: document.getElementById('cancelled-bookings'), recentTable: document.getElementById('recent-bookings-table') },
+        bookings: { table: document.getElementById('all-bookings-table'), search: document.getElementById('search-bookings'), filter: document.getElementById('filter-status'), refreshBtn: document.getElementById('refresh-bookings') },
+        settings: { user: document.getElementById('admin-username-setting'), newPass: document.getElementById('new-password'), confirmPass: document.getElementById('confirm-password'), saveBtn: document.getElementById('save-settings'), error: document.getElementById('password-error'), success: document.getElementById('password-success') },
+        modal: { overlay: document.getElementById('manage-modal'), content: document.getElementById('modal-details-content'), footer: document.getElementById('modal-details-footer'), closeBtn: document.querySelector('#manage-modal .modal-close') }
+    };
+
+    const utils = {
+        showLoading: (isLoading) => dom.loading.style.display = isLoading ? 'flex' : 'none',
+        formatDate: (dateStr) => new Date(dateStr.includes('T') ? dateStr : dateStr + 'T00:00:00').toLocaleDateString('en-CA'), // YYYY-MM-DD
+        capitalize: (s) => s.charAt(0).toUpperCase() + s.slice(1),
+    };
+
+    async function apiCall(action, payload = {}) {
+        utils.showLoading(true);
+        try {
+            const isRead = action === 'read';
+            const url = isRead ? `${SCRIPT_URL}?action=read&t=${new Date().getTime()}` : SCRIPT_URL;
+            
+            // **KEY FIX**: Send POST data as plain text to avoid CORS preflight issues with Google Scripts.
+            const body = isRead ? null : JSON.stringify({ action, ...payload });
+            const headers = isRead ? {} : { 'Content-Type': 'text/plain;charset=utf-8' };
+
+            const response = await fetch(url, {
+                method: isRead ? 'GET' : 'POST',
+                headers: headers,
+                body: body,
+                mode: 'cors',
+                redirect: 'follow'
+            });
+
+            if (!response.ok) throw new Error(`Network error: ${response.status} ${response.statusText}`);
+            return await response.json();
+        } catch (error) {
+            console.error(`API Call Error (${action}):`, error);
+            alert(`An error occurred: ${error.message}.`);
+            return { status: 'error', message: error.message };
+        } finally {
+            utils.showLoading(false);
+        }
+    }
+    
+    async function refreshData() {
+        const result = await apiCall('read');
+        if (result.status === 'success' && Array.isArray(result.data)) {
+            state.bookings = result.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            renderAll();
+        }
+    }
+
+    async function handleAction(action, bookingId) {
+        let result;
+        if (action === 'delete') {
+            if (!confirm(`Permanently delete booking ${bookingId}? This cannot be undone.`)) return;
+            result = await apiCall('deleteBooking', { bookingId });
+        } else {
+            const newStatus = action === 'confirm' ? 'confirmed' : 'cancelled';
+            result = await apiCall('updateStatus', { bookingId, newStatus });
+        }
+        
+        if (result.status === 'success') {
+            dom.modal.overlay.style.display = 'none';
+            await refreshData();
+        } else {
+            alert(`Action failed: ${result.message}`);
+        }
+    }
+
+    function renderAll() {
+        renderDashboard();
+        renderBookingsTable();
+    }
+
+    function renderDashboard() {
+        const { bookings } = state;
+        dom.dashboard.total.textContent = bookings.length;
+        dom.dashboard.pending.textContent = bookings.filter(b => b.status === 'pending').length;
+        dom.dashboard.confirmed.textContent = bookings.filter(b => b.status === 'confirmed').length;
+        dom.dashboard.cancelled.textContent = bookings.filter(b => b.status === 'cancelled').length;
+        dom.dashboard.recentTable.innerHTML = bookings.slice(0, 5).map(b => `
+            <tr>
+                <td>${b.name}</td>
+                <td>${utils.formatDate(b.date)} at ${b.time}</td>
+                <td><span class="status-badge status-${b.status}">${b.status}</span></td>
+                <td><button class="action-btn btn-manage" data-id="${b.bookingId}">Manage</button></td>
+            </tr>`).join('');
+    }
+
+    function renderBookingsTable() {
+        const searchTerm = dom.bookings.search.value.toLowerCase();
+        const status = dom.bookings.filter.value;
+        const filtered = state.bookings.filter(b =>
+            (String(b.name).toLowerCase().includes(searchTerm) || String(b.email).toLowerCase().includes(searchTerm) || String(b.phone).includes(searchTerm)) &&
+            (status === 'all' || b.status === status)
+        );
+        dom.bookings.table.innerHTML = filtered.map(b => `
+            <tr>
+                <td>${b.name}</td>
+                <td>${b.email}<br>${b.phone}</td>
+                <td>${utils.formatDate(b.date)} at ${b.time}</td>
+                <td><span class="status-badge status-${b.status}">${b.status}</span></td>
+                <td><button class="action-btn btn-manage" data-id="${b.bookingId}">Manage</button></td>
+            </tr>`).join('');
+    }
+
+    function showManageModal(bookingId) {
+        const b = state.bookings.find(b => b.bookingId === bookingId);
+        if (!b) return;
+
+        let footerHTML = `<button class="action-btn btn-delete" data-action="delete" data-id="${b.bookingId}">Delete</button>`;
+        if (b.status === 'pending') {
+            footerHTML += `<button class="action-btn btn-confirm" data-action="confirm" data-id="${b.bookingId}">Confirm</button>
+                           <button class="action-btn btn-cancel" data-action="cancel" data-id="${b.bookingId}">Cancel</button>`;
+        } else if (b.status === 'confirmed') {
+            footerHTML += `<button class="action-btn btn-cancel" data-action="cancel" data-id="${b.bookingId}">Mark as Cancelled</button>`;
+        }
+        
+        dom.modal.content.innerHTML = `<p><strong>ID:</strong> ${b.bookingId}</p><p><strong>Name:</strong> ${b.name}</p><p><strong>Contact:</strong> ${b.email} / ${b.phone}</p><p><strong>Meeting:</strong> ${utils.formatDate(b.date)} at ${b.time} (${b.duration} min)</p><p><strong>Status:</strong> <span class="status-badge status-${b.status}">${b.status}</span></p><p><strong>Notes:</strong> ${b.notes || 'N/A'}</p>`;
+        dom.modal.footer.innerHTML = footerHTML;
+        dom.modal.overlay.style.display = 'flex';
+    }
+    
+    function init() {
+        dom.login.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = dom.login.form.username.value;
+            const pass = dom.login.form.password.value;
+            if (user === state.credentials.username && pass === state.credentials.password) {
+                dom.login.screen.style.display = 'none';
+                dom.panel.screen.style.display = 'block';
+                dom.panel.userDisplay.textContent = state.credentials.username;
+                dom.panel.initial.textContent = state.credentials.username.charAt(0).toUpperCase();
+                refreshData();
+            } else {
+                dom.login.error.style.display = 'block';
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => { if(confirm("Logout?")) location.reload(); });
+
+        dom.menuLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                dom.sections.forEach(s => s.style.display = 'none');
+                document.getElementById(targetId).style.display = 'block';
+                dom.menuLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+
+        dom.bookings.search.addEventListener('input', renderBookingsTable);
+        dom.bookings.filter.addEventListener('change', renderBookingsTable);
+        dom.bookings.refreshBtn.addEventListener('click', refreshData);
+
+        document.body.addEventListener('click', e => {
+            const { target } = e;
+            const bookingId = target.dataset.id;
+            if (target.matches('.btn-manage') && bookingId) {
+                showManageModal(bookingId);
+            }
+            if (target.closest('.modal-footer')) {
+                const action = target.dataset.action;
+                if (action && bookingId) handleAction(action, bookingId);
+            }
+        });
+        
+        dom.modal.closeBtn.addEventListener('click', () => dom.modal.overlay.style.display = 'none');
+        dom.modal.overlay.addEventListener('click', (e) => { if (e.target === dom.modal.overlay) dom.modal.overlay.style.display = 'none'; });
+
+        dom.settings.saveBtn.addEventListener('click', () => {
+            const user = dom.settings.user.value.trim();
+            const newPass = dom.settings.newPass.value;
+            const confirmPass = dom.settings.confirmPass.value;
+            dom.settings.error.style.display = 'none';
+            if (!user) { dom.settings.error.textContent = "Username is required."; dom.settings.error.style.display = 'block'; return; }
+            if (newPass && newPass !== confirmPass) { dom.settings.error.textContent = "Passwords do not match."; dom.settings.error.style.display = 'block'; return; }
+            state.credentials.username = user;
+            if (newPass) state.credentials.password = newPass;
+            dom.panel.userDisplay.textContent = user;
+            dom.panel.initial.textContent = user.charAt(0).toUpperCase();
+            dom.settings.newPass.value = ''; dom.settings.confirmPass.value = '';
+            dom.settings.success.style.display = 'block';
+            setTimeout(() => dom.settings.success.style.display = 'none', 3000);
+        });
+        document.querySelector('a[href="#settings"]').addEventListener('click', () => { dom.settings.user.value = state.credentials.username; });
+    }
+
+    init();
+});
+</script>
+
+</body>
+</html>
